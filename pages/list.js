@@ -1,37 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Head from 'next/head'
-import Link from 'next/link'
-import { Row, Col, List } from 'antd'
+import { Row, Col, List, Breadcrumb } from 'antd'
 import * as Icon from '@ant-design/icons'
-import axios from 'axios'
 import Header from '../components/Header'
 import Author from '../components/Author'
 import Advert from '../components/Advert'
 import Footer from '../components/Footer'
-import '../styles/pages/index.css'
 import styles from '../styles/Home.module.css'
+import axios from 'axios'
 import servicePath from '../config/apiUrl'
-import marked from 'marked'
-import hljs from "highlight.js"
-import 'highlight.js/styles/monokai-sublime.css'
+import Link from 'next/link'
 
-const Home = (list) => {
+
+const CommonList = (list) => {
+
   const [mylist, setMylist] = useState(list.data)
-  const renderer = new marked.Renderer()
-  marked.setOptions({
-    renderer: renderer,
-    gfm: true,
-    pedantic: false,
-    sanitize: false,
-    tables: true,
-    breaks: false,
-    smartLists: true,
-    smartypants: false,
-    highlight: function (code) {
-      return hljs.highlightAuto(code).value;
-    }
+  useEffect(() => {
+    setMylist(list.data)
   })
-
   return (
     <div className={styles.container}>
       <Head>
@@ -41,7 +27,12 @@ const Home = (list) => {
       <Header />
       <Row className="comm-main" type="flex" justify="center">
         <Col className="comm-left" xs={24} sm={24} md={16} lg={18} xl={14}  >
-
+          <div className="bread-div">
+            <Breadcrumb>
+              <Breadcrumb.Item><a href="/">首页</a></Breadcrumb.Item>
+              <Breadcrumb.Item>视频列表</Breadcrumb.Item>
+            </Breadcrumb>
+          </div>
           <List
             header={<div>最新日志</div>}
             itemLayout="vertical"
@@ -54,13 +45,11 @@ const Home = (list) => {
                   </Link>
                 </div>
                 <div className="list-icon">
-                  <span>{ React.createElement(Icon && Icon['CalendarOutlined'],{spin: true})}{item.releaseTime}</span>
-                  <span>{ React.createElement(Icon && Icon['FolderOutlined'])} {item.typeName}</span>
-                  <span>{ React.createElement(Icon && Icon['FireOutlined'])}  {item.viewCount}人</span>
+                  <span>{React.createElement(Icon && Icon['CalendarOutlined'], { spin: true })}{item.releaseTime}</span>
+                  <span>{React.createElement(Icon && Icon['FolderOutlined'])} {item.typeName}</span>
+                  <span>{React.createElement(Icon && Icon['FireOutlined'])}  {item.viewCount}人</span>
                 </div>
-                <div className="list-context" dangerouslySetInnerHTML={{__html: marked(item.introduce)}}>
-
-                </div>
+                <div className="list-context">{item.introduce}</div>
               </List.Item>
             )}
           />
@@ -77,15 +66,16 @@ const Home = (list) => {
     </div>
   )
 }
-Home.getInitialProps = async () => {
+
+CommonList.getInitialProps = async (ctx) => {
+  let id = ctx.query.id
   const promise = new Promise((resolve, reject) => {
-    axios(servicePath.getArticles).then(
-      (res) => {
-        resolve(res.data)
-      }
-    )
+    axios(servicePath.getArticsByTypeId + id).then((res) => {
+      console.log(res.data)
+      resolve(res.data)
+    })
   })
   return await promise
 }
 
-export default Home
+export default CommonList
